@@ -24,11 +24,15 @@ from src.config import (
     path_for_mail_text, require_ready
 )
 
-# === ここから追記: フィルタリング ===
-# フィルタ設定を読み込み、各メッセージに対して通過/除外を判定します
+# === フィルタリング設定 ===
 from src.filters.mail_filter import load_filter_config, filter_message
 FILTER_CONF = load_filter_config()
-# === 追記ここまで ===
+
+# === ノイズ除外処理 ===
+from src.filters.noise_reducer import reduce_noise
+
+# === 除外メールCSV出力 ===
+from src.review.exporters import append_excluded
 
 
 def _decode_header(value: Optional[str]) -> str:
@@ -160,6 +164,9 @@ def _save_text(uid: bytes, msg: email.message.Message) -> str:
     body_parts = list(_iter_text_parts(msg))
     body = "\n\n".join(body_parts).strip()
 
+    # === ノイズ除外処理 ===
+    body = reduce_noise(body)
+
     file_stem = f"{d.strftime('%Y%m%d_%H%M%S')}_UID{uid.decode()}"
     path = path_for_mail_text(file_stem)
 
@@ -216,16 +223,13 @@ def main():
                 subj = _decode_header(msg.get("Subject"))
                 frm = _decode_header(msg.get("From"))
                 print(f"[DRY] {d:%Y-%m-%d %H:%M:%S} UID={uid.decode()} From={frm} Subj={subj}")
-                # dry-runでもフィルタ結果を見たい場合は以下を解除
-                # res = filter_message(msg, FILTER_CONF)
-                # print(f"       -> filter: pass={res.pass_through} reason={res.reason} detail={res.detail}")
                 continue
 
-            # === ここからフィルタリング（保存前に判定） ===
+            # === フィルタリング（保存前に判定） ===
             res = filter_message(msg, FILTER_CONF)
             if not res.pass_through:
-                # 除外：保存も次工程も行わない
-                # 画面にも軽く出しておくと確認が楽です（ログは filters 側で出ます）
+                # ▼ ここが 2-2: 目視確認用のCSVに追記してから除外
+                append_excluded(uid, msg, reason=res.reason or "", detail=res.detail)
                 print(f"[DROP] UID={uid.decode()} reason={res.reason} detail={res.detail} Subj={_decode_header(msg.get('Subject'))}")
                 continue
             # === フィルタ通過：案件メールのみ保存 ===
