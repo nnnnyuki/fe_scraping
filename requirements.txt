@@ -1,4 +1,11 @@
-beautifulsoup4
-python-dotenv
-loguru
-tzdata
+beautifulsoup4==4.14.2
+colorama==0.4.6
+jaconv==0.4.0
+loguru==0.7.3
+python-dotenv==1.1.1
+PyYAML==6.0.3
+schedule==1.2.2
+soupsieve==2.8
+typing_extensions==4.15.0
+tzdata==2025.2
+win32_setctime==1.2.0

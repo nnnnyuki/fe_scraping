@@ -1,0 +1,29 @@
+attachments:
+  blocked_extensions:
+    [
+      xlsx,
+      xls,
+      xlsm,
+      xlsb,
+      ods,
+      csv,
+      tsv,
+      numbers,
+      pdf,
+      doc,
+      docx,
+      zip,
+      rar,
+      7z,
+    ]
+
+keywords:
+  blocklist:
+    - 人材情報
+    - 職務経歴書
+    - 候補者
+
+normalization:
+  to_half_width: true
+  unify_kana: true
+  trim_spaces: true
